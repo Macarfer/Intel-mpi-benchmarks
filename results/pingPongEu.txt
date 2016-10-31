@@ -1,0 +1,37 @@
+Tamano reservado: 4
+#bytes	#repetitions	t[μsec]	Mbytes/sec
+[-1] MPI startup(): Imported environment partly inaccesible. Map=0 Info=669ad0
+Tamano reservado: 4
+#bytes	#repetitions	t[μsec]	Mbytes/sec
+[-1] MPI startup(): Imported environment partly inaccesible. Map=0 Info=16eaad0
+[0] MPI startup(): Multi-threaded optimized library
+[1] MPI startup(): shm data transfer mode
+[0] MPI startup(): shm data transfer mode
+[0] MPI startup(): Rank    Pid      Node name  Pin cpu
+[0] MPI startup(): 0       25358    c7255      +1
+[0] MPI startup(): 1       25359    c7255      +1
+[0] MPI startup(): I_MPI_DEBUG=5
+0	1000	2000	0.527978
+1	1000	2000	0.633001
+2	1000	2000	0.638485
+4	1000	2000	0.585914
+8	1000	2000	0.553966
+16	1000	2000	0.557423
+32	1000	2000	0.533938
+64	1000	2000	0.556469
+128	1000	2000	0.576496
+256	1000	2000	0.603557
+512	1000	2000	0.717998
+1024	1000	2000	0.782013
+2048	1000	2000	1.016498
+4096	1000	2000	1.348972
+8192	1000	2000	2.195954
+16384	1000	2000	3.912091
+32768	1000	2000	7.007957
+65536	640	1280	13.266318
+131072	320	640	23.460761
+262144	160	320	42.959303
+524288	80	160	82.425773
+1048576	40	80	159.612298
+2097152	20	40	328.201056
+4194304	10	20	704.205036
