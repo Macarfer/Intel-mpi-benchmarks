@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	//MPI_BYTE  message;
     double inicio,total;
     int i,X=sizeof(MPI_BYTE),n_barr;
-    int n_sample = MSGSPERSAMPLE;
+    int previous,next,n_sample = MSGSPERSAMPLE;
     //printf("Tamano de n_sample-> %d\n",n_sample);
     unsigned char * msg = malloc(sizeof(MPI_BYTE));
     printf("#bytes\t#repetitions\tt[μsec]\tMbytes/sec\n");
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
                 // printf("Im number 1 and received a message!\n");
             
             }
-             MPI_Barrier(MPI_COMM_WORLD);
+            // MPI_Barrier(MPI_COMM_WORLD);
         }
 
         free(msg);
@@ -68,12 +68,17 @@ int main(int argc, char *argv[])
         for(;X<=OVERALL_VOL && n_sample>=10;){ 
         i=0;
         MPI_Barrier(MPI_COMM_WORLD);
-
+        previous=(size+rank-1) % size;
+        next=(size+rank+1) % size;
         inicio=MPI_Wtime();
-
         for(;i<n_sample;i++){
-                MPI_Send(msg,X,MPI_BYTE,(size+rank+1) % size,0,MPI_COMM_WORLD);
-                MPI_Recv(msg,X,MPI_BYTE,(size+rank-1) % size,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+        	if(!rank){
+                MPI_Send(msg,X,MPI_BYTE,next,0,MPI_COMM_WORLD);
+                MPI_Recv(msg,X,MPI_BYTE,previous,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            }else{
+                MPI_Recv(msg,X,MPI_BYTE,previous,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+                MPI_Send(msg,X,MPI_BYTE,next,0,MPI_COMM_WORLD);
+            }
         }
        // if (!rank)
         total=MPI_Wtime();
@@ -85,7 +90,6 @@ int main(int argc, char *argv[])
             X=1;
         else
             X*=2;
-
         free(msg);
         msg=malloc(X);
         n_sample=fmax(1,fmin(MSGSPERSAMPLE,OVERALL_VOL/X));
