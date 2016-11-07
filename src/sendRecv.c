@@ -43,21 +43,11 @@ int main(int argc, char *argv[])
         */
         for(i=0;i<N_WARMUP;i++){
               //char msg[sizeof(MPI_BYTE)];
-
-              MPI_Barrier(MPI_COMM_WORLD);
-           if(!rank){
-               // printf("asdf: %d\n",(size+rank+1) % size);
-                MPI_Send(msg,X,MPI_BYTE,(size+rank+1) % size,rank,MPI_COMM_WORLD);
-                //printf("asdf: %d\n",(size+rank-1) % size);
-                MPI_Recv(msg,X,MPI_BYTE,(size+rank-1) % size,rank,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                //printf("Im number 0 and received a message!\n");
-            }else{
-                MPI_Recv(msg,X,MPI_BYTE,(size+rank-1) % size,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                MPI_Send(msg,X,MPI_BYTE,(size+rank+1) % size,0,MPI_COMM_WORLD);
-                // printf("Im number 1 and received a message!\n");
-            
-            }
-            // MPI_Barrier(MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
+        previous=(size+rank-1) % size;
+        next=(size+rank+1) % size;
+        MPI_Sendrecv(msg,X,MPI_BYTE,next,rank,msg,X,MPI_BYTE,previous,previous,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+        MPI_Barrier(MPI_COMM_WORLD);
         }
 
         free(msg);
@@ -72,15 +62,8 @@ int main(int argc, char *argv[])
         next=(size+rank+1) % size;
         inicio=MPI_Wtime();
         for(;i<n_sample;i++){
-        	if(!rank){
-                MPI_Send(msg,X,MPI_BYTE,next,0,MPI_COMM_WORLD);
-                MPI_Recv(msg,X,MPI_BYTE,previous,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-            }else{
-                MPI_Recv(msg,X,MPI_BYTE,previous,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-                MPI_Send(msg,X,MPI_BYTE,next,0,MPI_COMM_WORLD);
-            }
+        	 MPI_Sendrecv(msg,X,MPI_BYTE,next,rank,msg,X,MPI_BYTE,previous,previous,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
         }
-       // if (!rank)
         total=MPI_Wtime();
         total=((total-inicio)/2/n_sample);
         if(!rank)
@@ -90,6 +73,7 @@ int main(int argc, char *argv[])
             X=1;
         else
             X*=2;
+        
         free(msg);
         msg=malloc(X);
         n_sample=fmax(1,fmin(MSGSPERSAMPLE,OVERALL_VOL/X));
