@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
 	int rank=0,size;
 	//MPI_BYTE  message;
     double inicio,total;
-    int i,X=sizeof(MPI_BYTE),n_barr;
-    int previous,next,n_sample = MSGSPERSAMPLE;
+    int i,actual=0,X=sizeof(MPI_BYTE),n_barr;
+    int n_sample = MSGSPERSAMPLE;
     //printf("Tamano de n_sample-> %d\n",n_sample);
     unsigned char * msg = malloc(sizeof(MPI_BYTE));
-    printf("#bytes\t#repetitions\tt[μsec]\tMbytes/sec\n");
+    unsigned char * rcvMsg = malloc(sizeof(MPI_BYTE));
     //Inicio o lugar de comunicacion entre os procesos
 	MPI_Init(&argc,&argv);
 		//printf("Initial time %ld\n",MPI_Wtime());
@@ -35,39 +35,44 @@ int main(int argc, char *argv[])
         MPI_Comm_size(MPI_COMM_WORLD,&n_barr);
 
 
-         MPI_Comm_size (MPI_COMM_WORLD, &size);    /* get number of processes */
+        MPI_Comm_size (MPI_COMM_WORLD, &size);    /* get number of processes */
 
         
           /*
                 WARMUP!!!
         */
         for(i=0;i<N_WARMUP;i++){
-              //char msg[sizeof(MPI_BYTE)];
-        MPI_Barrier(MPI_COMM_WORLD);
-        previous=(size+rank-1) % size;
-        next=(size+rank+1) % size;
-        MPI_Sendrecv(msg,X,MPI_BYTE,next,rank,msg,X,MPI_BYTE,previous,previous,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-        MPI_Barrier(MPI_COMM_WORLD);
+           actual=0;
+            for(;actual <  size ;){
+                    MPI_Bcast(msg,X,MPI_BYTE,actual,MPI_COMM_WORLD);
+                    actual++;
+            }
         }
 
         free(msg);
         msg=malloc(X);
         X=0;
 
+        if(!rank)
+            printf("#bytes\t#repetitions\tt[μsec]\n");
 
         for(;X<=OVERALL_VOL && n_sample>=10;){ 
         i=0;
         MPI_Barrier(MPI_COMM_WORLD);
-        previous=(size+rank-1) % size;
-        next=(size+rank+1) % size;
+
         inicio=MPI_Wtime();
         for(;i<n_sample;i++){
-        	 MPI_Sendrecv(msg,X,MPI_BYTE,next,rank,msg,X,MPI_BYTE,previous,previous,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            actual=0;
+            for(;actual <  size ;){
+                    MPI_Bcast(msg,X,MPI_BYTE,actual,MPI_COMM_WORLD);
+                    actual++;
+            }
         }
         total=MPI_Wtime();
-        total=((total-inicio)/n_sample);
+        total=((total-inicio));///n_sample);
+
         if(!rank)
-            printf("%d\t%d\t%f\t%lf\n",X,n_sample,total*1000000,2*X/(1.048576*total)/(1024*1024));
+            printf("%d\t%d\t%f\t\n",X,n_sample,total*1000000);
             
         if(X==0)
             X=1;
@@ -76,6 +81,7 @@ int main(int argc, char *argv[])
         
         free(msg);
         msg=malloc(X);
+        rcvMsg[0]='\0';
         n_sample=fmax(1,fmin(MSGSPERSAMPLE,OVERALL_VOL/X));
 
         }
